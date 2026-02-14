@@ -409,15 +409,24 @@ def run_logic(app, links):
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", False)
 
+   
+
     download_path = get_download_path()
 
     if not download_path:
         print("Cartella download non impostata.")
         return
 
+    # Normalizza percorso Windows
+    download_path = os.path.abspath(download_path)
+    download_path = download_path.replace("/", "\\")
+
+    # Assicurati che esista
+    os.makedirs(download_path, exist_ok=True)
+
 
     prefs = {
-        "download.default_directory": download_path,
+        "download.default_directory": os.path.normpath(download_path),
         "download.prompt_for_download": False,
         "download.directory_upgrade": True,
         "safebrowsing.enabled": True
