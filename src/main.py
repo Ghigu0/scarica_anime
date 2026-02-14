@@ -3,6 +3,7 @@ from tkinter import ttk, filedialog
 import os
 import latest_episodes
 import full_episodes
+import partial_episodes  # NUOVO IMPORT
 
 DOWNLOAD_PATH_FILE = "download_path.txt"
 
@@ -62,6 +63,15 @@ class App(tk.Tk):
         )
         self.full_button.pack(pady=10, ipadx=20, ipady=10)
 
+        # NUOVO PULSANTE: Episodi Specifici
+        self.partial_button = ttk.Button(
+            self.main_frame,
+            text="Range di episodi",
+            command=self.run_partial,
+            state="disabled"
+        )
+        self.partial_button.pack(pady=10, ipadx=20, ipady=10)
+
         # Controllo se esiste già un percorso salvato
         self.load_saved_download_path()
 
@@ -70,7 +80,6 @@ class App(tk.Tk):
     # =====================================================
 
     def select_download_folder(self):
-
         folder = filedialog.askdirectory()
 
         if folder:
@@ -85,9 +94,9 @@ class App(tk.Tk):
             # abilita bottoni
             self.latest_button.config(state="normal")
             self.full_button.config(state="normal")
+            self.partial_button.config(state="normal")
 
     def load_saved_download_path(self):
-
         if os.path.exists(DOWNLOAD_PATH_FILE):
             with open(DOWNLOAD_PATH_FILE, "r", encoding="utf-8") as f:
                 folder = f.read().strip()
@@ -97,9 +106,9 @@ class App(tk.Tk):
                     text=f"Cartella: {folder}",
                     foreground="green"
                 )
-
                 self.latest_button.config(state="normal")
                 self.full_button.config(state="normal")
+                self.partial_button.config(state="normal")
             else:
                 self.path_label.config(
                     text="Cartella salvata non valida",
@@ -111,21 +120,24 @@ class App(tk.Tk):
     # =====================================================
 
     def run_latest(self):
+        partial_episodes.close_ui(self) # Chiude eventuale frame partial
+        full_episodes.open_ui(self)     # Nota: full e latest si gestiscono a vicenda nei loro file, 
+                                        # ma per pulizia chiudiamo partial qui o dentro latest_episodes.
+                                        # Per semplicità, latest_episodes.open_ui dovrebbe chiudere partial_frame se esiste.
         latest_episodes.open_ui(self)
 
     def run_full(self):
+        partial_episodes.close_ui(self)
         full_episodes.open_ui(self)
 
-    def show_home(self):
-        for widget in self.main_frame.winfo_children():
-            widget.destroy()
-
-        self.__init__()  # ricrea interfaccia pulita
-
-
-# =====================================================
-# AVVIO PROGRAMMA
-# =====================================================
+    def run_partial(self):
+        # Chiudiamo gli altri frame se aperti (o gestiamo tutto dentro partial_episodes)
+        if hasattr(self, "latest_frame") and self.latest_frame.winfo_exists():
+            self.latest_frame.pack_forget()
+        if hasattr(self, "full_frame") and self.full_frame.winfo_exists():
+            self.full_frame.pack_forget()
+            
+        partial_episodes.open_ui(self)
 
 if __name__ == "__main__":
     app = App()
